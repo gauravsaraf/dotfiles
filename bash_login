@@ -1,0 +1,123 @@
+# MacPorts Installer addition on 2012-03-07_at_17:16:33: adding an appropriate PATH variable for use with MacPorts.
+export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+# Finished adapting your PATH environment variable for use with MacPorts.
+
+SOAS_HOME=~/Projects/Ventana/soa-systems
+VHOME=~/Projects/Ventana/ventana
+
+# set aliases
+alias startsql='sudo cd; sudo /opt/local/bin/mysqld_safe5 &'
+alias stopsql='sudo /opt/local/bin/mysqladmin5 -uroot shutdown'
+alias cdv='cd ~/Projects/Ventana/ventana'
+alias cds='cd ~/Projects/Ventana/soa-systems'
+alias cdd='cd ~/Projects/Ventana/sample_data'
+alias ls='ls -aFhG'
+alias ll='ls -aFhlG'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias code='cd ~/Projects/Ventana/ventana'
+alias sc='./script/console'
+alias start='./script/server'
+alias soa='tail -f log/development.log | grep web_service_request'
+alias upgrade='cdv; ./script/web_services upgrade'
+alias startsoa='cdv; ./script/web_services start'
+alias status='echo "VENTANA"; cdv; git status ;echo "SOA";  cds; git status; echo "SAMPLE DATA";  cdd; git status; cdv'
+
+cds
+source castlight_env.sh
+cd
+source ~/Projects/Ventana/soa-systems/dev_env_setup
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+
+# include current git branch name in prompt when in a git repository
+function find_git_branch {
+  local dir=. head
+  until [ "$dir" -ef / ]; do
+      if [ -f "$dir/.git/HEAD" ]; then
+          head=$(< "$dir/.git/HEAD")
+          if [[ $head == ref:\ refs/heads/* ]]; then
+              git_branch="[${head##*/}]"
+          elif [[ $head != '' ]]; then
+              git_branch='[detached]'
+          else
+              git_branch='[unknown]'
+          fi
+          return
+      fi
+      dir="../$dir"
+  done
+  git_branch=''
+}
+PROMPT_COMMAND="find_git_branch; $PROMPT_COMMAND"
+
+# enable git autocomplete
+source ~/.git-completion.sh
+
+# enable .ssh/known_hosts autocomplete
+complete -W "$(echo `cat ~/.ssh/known_hosts | cut -f 1 -d ' ' | sed -e s/,.*//g -e s/"\["//g -e s/"\]".*//g | uniq`;)" ssh
+
+# useful functions
+# Code check a commit
+# > cc abc1234cdebas321
+cc() 
+{
+  rake code:check["$1"]
+}
+
+# git pull all Ventana repositories that I use
+# > pull_all
+pull_all()
+{
+  ORIGIN=`pwd`
+
+  cd ~/Projects/Ventana
+  for i in app_analytics app_scripts audit pantry prodsys reference release_scripts sample_data soa-systems ventana
+  do
+    cd $i
+    echo "Pulling $i"
+    git pull
+    cd ..
+  done
+
+  cd $ORIGIN
+}
+
+# Show all git branches by last modified date
+# > recent_branches
+recent_branches()
+{
+  for k in `git branch -r|perl -pe s/^..//`;do echo -e `git show --pretty=format:"%Cgreen%ci %Cblue%cr%Creset" $k|head -n 1`\\t$k;done|sort  
+}
+
+# cd's to frontmost window of Finder
+function cdf() {
+    cd "`osascript -e 'tell application "Finder"' \
+    -e 'set myname to POSIX path of (target of window 1 as alias)' \
+    -e 'end tell' 2>/dev/null`"
+}
+
+# spotlight powered locate
+function slocate() {
+    mdfind "kMDItemDisplayName == '$@'wc";
+}
+
+# Usage:
+#    $ some_command ; notify
+# After the command finishes, email is sent to blankspace-delimited list of email addresses in mail variable
+# Especially useful if you use a mobile carrier address that sends you a text message
+# For example, nnnnnnnnnn@messaging.sprintpcs.com for Sprint, nnnnnnnnnn@vtext.com for Verizon
+#     or nnnnnnnnnn@txt.att.net for AT&T
+function notify() {
+    # NOTE!!! Set mail var to desired list of email addresses.
+    mail="gsaraf@castlighthealth.com"
+    str1="`history 1 | cut -b 8-`"
+    str2="${str1%;*}"
+    echo ${str2} | mail -s CMD_FINISH ${mail}
+}
+
+echo "Begin with a smile :)"
+cdv
+
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
